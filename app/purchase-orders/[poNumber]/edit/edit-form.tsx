@@ -31,7 +31,7 @@ export function EditForm({
       <fieldset disabled={isPending} className="space-y-4">
         {scope === 'full' ? (
           <section className="rounded-lg bg-white p-5 ring-1 ring-slate-200">
-            <h2 className="text-xs font-medium tracking-wide text-slate-500 uppercase">Order</h2>
+            <h2 className="section-title">Order</h2>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <Field label="Vendor" name="vendor" defaultValue={value('vendor', po.vendor)} required />
               <Field label="Brand" name="brand" defaultValue={value('brand', po.brand)} required />
@@ -59,7 +59,7 @@ export function EditForm({
         ) : null}
 
         <section className="rounded-lg bg-white p-5 ring-1 ring-slate-200">
-          <h2 className="text-xs font-medium tracking-wide text-slate-500 uppercase">Booking</h2>
+          <h2 className="section-title">Booking</h2>
           <p className="mt-1 max-w-[70ch] text-xs text-slate-500">
             Marking a PO shipped records only that it sailed. These three come back from the
             carrier afterwards, and this is where they land.
@@ -83,9 +83,7 @@ export function EditForm({
 
         {scope === 'full' ? (
           <section className="rounded-lg bg-white p-5 ring-1 ring-slate-200">
-            <h2 className="text-xs font-medium tracking-wide text-slate-500 uppercase">
-              Line items
-            </h2>
+            <h2 className="section-title">Line items</h2>
             <p className="mt-1 max-w-[70ch] text-xs text-slate-500">
               Quantities and costs only. Changing a SKU makes it a different order, which is a new
               PO rather than an edit.

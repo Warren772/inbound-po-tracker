@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="sticky top-0 z-10 border-b border-slate-200 bg-white">
           <div className="mx-auto flex max-w-[1400px] items-center gap-4 px-6 py-3">
             <Link href="/" className="flex items-baseline gap-2.5">
-              <span className="text-[15px] font-semibold tracking-tight text-slate-900">
+              <span className="text-sm font-semibold tracking-tight text-slate-900">
                 Inbound PO Tracker
               </span>
               <span className="hidden text-xs text-slate-500 sm:inline">Home textiles &middot; US East</span>

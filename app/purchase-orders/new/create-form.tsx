@@ -23,9 +23,7 @@ export function CreateForm({ today }: { today: string }) {
     <form action={formAction} className="space-y-4">
       <fieldset disabled={isPending} className="space-y-4">
         <section className="rounded-lg bg-white p-5 ring-1 ring-slate-200">
-          <h2 className="text-xs font-medium tracking-wide text-slate-500 uppercase">
-            Order
-          </h2>
+          <h2 className="section-title">Order</h2>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <Field
               label="PO number"
@@ -60,9 +58,7 @@ export function CreateForm({ today }: { today: string }) {
         </section>
 
         <section className="rounded-lg bg-white p-5 ring-1 ring-slate-200">
-          <h2 className="text-xs font-medium tracking-wide text-slate-500 uppercase">
-            Line items
-          </h2>
+          <h2 className="section-title">Line items</h2>
           <p className="mt-1 text-xs text-slate-500">
             The first line is required. Leave the rest blank if the PO is a single SKU.
           </p>

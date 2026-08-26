@@ -15,8 +15,10 @@ The job is moving POs through states and observing preexisting states.
 
 - **The list is filtered by triage.** Rows sort by urgency. Exceptions
   and overdue containers first, closed POs last.
-- **Status has a visual indicator.** A tinted indicator per row, coupled
-  with a colored text for urgency. 
+- **Status has a visual indicator.** A tinted dot per row, coupled
+  with a colored text for urgency.
+- **The timeline shows where the PO is, not just what it has.** Milestones behind
+  the PO are emerald and joined by a solid rail.
 - **Transitions fire from the row.** Each row carries its one legal next move
   (`Confirm`, `Mark shipped`, `Receive`, `Clear exception`).
 - **Blocked moves are shown with their reason.** For example, `PO-2026-0961` is five
@@ -36,6 +38,11 @@ and the action returns its error as a value that has to render.
 
 **Editing and the status machine own disjoint fields.** No input on the edit
 form writes `status`, `confirmedOn`, `shippedOn` or `receivedOn`
+
+
+**The timeline reads off the head of the track, not off each step.** The status
+maps to one index in the five milestones, and done/current/projected fall out of
+the comparison.
 
 **Filtering is a URL search param** The view tiles are `<Link>`s and the list re-renders on the server.
 
@@ -89,6 +96,9 @@ Stated here rather than guessed silently:
 - **A received PO is never flagged.** PO-2026-0925 landed four days after its
   ETA. 
 - **Light theme only.**
+- **No webfont.** The brief rules out dependencies, and a `next/font/google` face
+  would make `next build` in CI depend on a third-party host and reintroduce the
+  layout shift this app otherwise has none of.
 - **A new PO is always a `draft`,** with every downstream date null. `draft` is
   the state machine's entry edge, so the create form has no status field.
 - **The PO number is typed in, not generated.** It is the ERP's identity and it

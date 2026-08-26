@@ -18,7 +18,7 @@ export default function NewPurchaseOrderPage() {
       </Link>
 
       <header className="rounded-lg bg-white px-5 py-4 ring-1 ring-slate-200">
-        <h1 className="text-lg font-semibold tracking-tight text-slate-900">Raise a purchase order</h1>
+        <h1 className="page-title">Raise a purchase order</h1>
         <p className="mt-1 max-w-[70ch] text-sm text-slate-600">
           A new PO is a draft. Confirmation, sailing and receipt are transitions, so this form has
           no status field and no ship or receive dates — the vendor confirms it, and the rest

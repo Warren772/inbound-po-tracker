@@ -7,8 +7,10 @@ import { STATUS_LABEL } from '@/lib/status';
  * A small color marker against plain text keeps the vertical
  * rhythm of the column readable.
  *
+ * Exported on its own because the detail page's timeline marks its current
+ * stage in the status's own color.
  */
-const MARKER: Record<PurchaseOrderStatus, string> = {
+export const STATUS_DOT: Record<PurchaseOrderStatus, string> = {
   draft: 'bg-slate-400',
   confirmed: 'bg-sky-500',
   in_transit: 'bg-indigo-500',
@@ -23,7 +25,7 @@ export function StatusIndicator({ status }: { status: PurchaseOrderStatus }) {
       data-status={status}
       className="inline-flex items-center gap-2 whitespace-nowrap text-slate-800"
     >
-      <span aria-hidden className={`size-2 shrink-0 rounded-full ${MARKER[status]}`} />
+      <span aria-hidden className={`size-2 shrink-0 rounded-full ${STATUS_DOT[status]}`} />
       {STATUS_LABEL[status]}
     </span>
   );

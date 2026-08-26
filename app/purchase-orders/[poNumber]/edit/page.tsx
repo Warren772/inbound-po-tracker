@@ -36,7 +36,7 @@ export default async function EditPurchaseOrderPage({
 
       <header className="rounded-lg bg-white px-5 py-4 ring-1 ring-slate-200">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="numeric text-lg font-semibold tracking-tight text-slate-900">
+          <h1 className="page-title numeric">
             Edit {po.poNumber}
           </h1>
           <StatusIndicator status={po.status} />
