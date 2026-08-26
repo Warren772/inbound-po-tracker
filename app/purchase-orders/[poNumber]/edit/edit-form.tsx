@@ -92,38 +92,41 @@ export function EditForm({
             </p>
             <div className="mt-3 space-y-4">
               {po.lines.map((line, index) => (
-                <div
+                <fieldset
                   key={line.sku}
-                  className="grid gap-3 border-t border-slate-100 pt-4 first:border-0 first:pt-0 sm:grid-cols-[1fr_100px_120px]"
+                  className="border-t border-slate-100 pt-4 first:border-0 first:pt-0"
                 >
-                  <div>
-                    <span className="numeric block text-sm font-medium text-slate-900">
-                      {line.sku}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-slate-500">{line.description}</span>
-                    <span className="mt-0.5 block text-xs text-slate-400">
-                      was {line.quantity} @ {formatUsd(line.unitCostUsd)}
-                    </span>
+                  <legend className="sr-only">{line.sku}</legend>
+                  <div className="grid gap-3 sm:grid-cols-[1fr_100px_120px]">
+                    <div>
+                      <span className="numeric block text-sm font-medium text-slate-900">
+                        {line.sku}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-slate-500">{line.description}</span>
+                      <span className="mt-0.5 block text-xs text-slate-400">
+                        was {line.quantity} @ {formatUsd(line.unitCostUsd)}
+                      </span>
+                    </div>
+                    <Field
+                      label="Quantity"
+                      name={`line-${index}-quantity`}
+                      type="number"
+                      min="1"
+                      step="1"
+                      defaultValue={value(`line-${index}-quantity`, String(line.quantity))}
+                      required
+                    />
+                    <Field
+                      label="Unit cost"
+                      name={`line-${index}-unitCostUsd`}
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      defaultValue={value(`line-${index}-unitCostUsd`, String(line.unitCostUsd))}
+                      required
+                    />
                   </div>
-                  <Field
-                    label="Quantity"
-                    name={`line-${index}-quantity`}
-                    type="number"
-                    min="1"
-                    step="1"
-                    defaultValue={value(`line-${index}-quantity`, String(line.quantity))}
-                    required
-                  />
-                  <Field
-                    label="Unit cost"
-                    name={`line-${index}-unitCostUsd`}
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    defaultValue={value(`line-${index}-unitCostUsd`, String(line.unitCostUsd))}
-                    required
-                  />
-                </div>
+                </fieldset>
               ))}
             </div>
           </section>

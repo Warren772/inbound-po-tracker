@@ -69,43 +69,46 @@ export function CreateForm({ today }: { today: string }) {
 
           <div className="mt-3 space-y-4">
             {LINE_SLOTS.map((index) => (
-              <div
+              <fieldset
                 key={index}
-                className="grid gap-3 border-t border-slate-100 pt-4 first:border-0 first:pt-0 sm:grid-cols-[1fr_2fr_100px_120px]"
+                className="border-t border-slate-100 pt-4 first:border-0 first:pt-0"
               >
-                <Field
-                  label={`SKU ${index + 1}`}
-                  name={`line-${index}-sku`}
-                  defaultValue={value(`line-${index}-sku`)}
-                  required={index === 0}
-                  placeholder="HL-TWL-600"
-                />
-                <Field
-                  label="Description"
-                  name={`line-${index}-description`}
-                  defaultValue={value(`line-${index}-description`)}
-                  required={index === 0}
-                  placeholder="600gsm bath towel, white"
-                />
-                <Field
-                  label="Quantity"
-                  name={`line-${index}-quantity`}
-                  type="number"
-                  min="1"
-                  step="1"
-                  defaultValue={value(`line-${index}-quantity`)}
-                  required={index === 0}
-                />
-                <Field
-                  label="Unit cost"
-                  name={`line-${index}-unitCostUsd`}
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  defaultValue={value(`line-${index}-unitCostUsd`)}
-                  required={index === 0}
-                />
-              </div>
+                <legend className="sr-only">Line {index + 1}</legend>
+                <div className="grid gap-3 sm:grid-cols-[1fr_2fr_100px_120px]">
+                  <Field
+                    label={`SKU ${index + 1}`}
+                    name={`line-${index}-sku`}
+                    defaultValue={value(`line-${index}-sku`)}
+                    required={index === 0}
+                    placeholder="HL-TWL-600"
+                  />
+                  <Field
+                    label="Description"
+                    name={`line-${index}-description`}
+                    defaultValue={value(`line-${index}-description`)}
+                    required={index === 0}
+                    placeholder="600gsm bath towel, white"
+                  />
+                  <Field
+                    label="Quantity"
+                    name={`line-${index}-quantity`}
+                    type="number"
+                    min="1"
+                    step="1"
+                    defaultValue={value(`line-${index}-quantity`)}
+                    required={index === 0}
+                  />
+                  <Field
+                    label="Unit cost"
+                    name={`line-${index}-unitCostUsd`}
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    defaultValue={value(`line-${index}-unitCostUsd`)}
+                    required={index === 0}
+                  />
+                </div>
+              </fieldset>
             ))}
           </div>
         </section>

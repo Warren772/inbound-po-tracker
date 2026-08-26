@@ -342,6 +342,8 @@ const NEW_LINE_SLOTS = 3;
 /** The create form's line rows. Blank slots are skipped; one has to be filled. */
 function readNewLines(formData: FormData): { lines: PurchaseOrderLine[] } | Failed {
   const lines: PurchaseOrderLine[] = [];
+  // The SKU is a line's identity.
+  const seen = new Set<string>();
 
   for (let index = 0; index < NEW_LINE_SLOTS; index += 1) {
     const sku = text(formData, `line-${index}-sku`);
@@ -357,6 +359,11 @@ function readNewLines(formData: FormData): { lines: PurchaseOrderLine[] } | Fail
     if (sku.length > MAX_TEXT || description.length > MAX_TEXT) {
       return { error: `Line ${index + 1} is too long.` };
     }
+
+    if (seen.has(sku.toUpperCase())) {
+      return { error: `Line ${index + 1} repeats ${sku}. Put the whole quantity on one line.` };
+    }
+    seen.add(sku.toUpperCase());
 
     const amounts = readAmounts(rawQuantity, rawCost, index);
     if ('error' in amounts) return amounts;
@@ -398,6 +405,7 @@ function readEditedLines(
 }
 
 const MAX_QUANTITY = 1_000_000;
+const MIN_UNIT_COST = 0.01;
 const MAX_UNIT_COST = 100_000;
 
 function readAmounts(
@@ -410,10 +418,11 @@ function readAmounts(
     return { error: `Line ${index + 1} needs a whole quantity of at least 1.` };
   }
 
-  const unitCostUsd = Number(rawCost);
-  if (!Number.isFinite(unitCostUsd) || unitCostUsd <= 0 || unitCostUsd > MAX_UNIT_COST) {
-    return { error: `Line ${index + 1} needs a unit cost above zero.` };
+  // Rounded before it is checked.
+  const unitCostUsd = Math.round(Number(rawCost) * 100) / 100;
+  if (!Number.isFinite(unitCostUsd) || unitCostUsd < MIN_UNIT_COST || unitCostUsd > MAX_UNIT_COST) {
+    return { error: `Line ${index + 1} needs a unit cost of at least $0.01.` };
   }
 
-  return { quantity, unitCostUsd: Math.round(unitCostUsd * 100) / 100 };
+  return { quantity, unitCostUsd };
 }
