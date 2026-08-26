@@ -30,7 +30,7 @@ export function Field({
     <label className="block">
       <span className="block text-xs font-medium text-slate-600">
         {label}
-        {required ? null : <span className="ml-1 font-normal text-slate-400">optional</span>}
+        {required ? null : <span className="ml-1 font-normal text-slate-500">optional</span>}
       </span>
       <input
         type={type}

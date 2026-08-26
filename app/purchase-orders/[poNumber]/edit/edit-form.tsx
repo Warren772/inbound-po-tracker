@@ -102,7 +102,7 @@ export function EditForm({
                         {line.sku}
                       </span>
                       <span className="mt-0.5 block text-xs text-slate-500">{line.description}</span>
-                      <span className="mt-0.5 block text-xs text-slate-400">
+                      <span className="mt-0.5 block text-xs text-slate-500">
                         was {line.quantity} @ ${line.unitCostUsd.toFixed(2)}
                       </span>
                     </div>
