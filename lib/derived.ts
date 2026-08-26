@@ -157,8 +157,12 @@ export function matchesView(po: PurchaseOrder, view: ViewKey): boolean {
     case 'attention':
       return attentionFor(po) !== null;
     case 'arriving': {
+      // Bounded at both ends. An ETA already in the past is overdue, not
+      // arriving, and belongs to 'attention' and 'transit' rather than here.
       const eta = daysToEta(po);
-      return po.status === 'in_transit' && eta !== null && eta <= ARRIVING_WINDOW_DAYS;
+      return (
+        po.status === 'in_transit' && eta !== null && eta >= 0 && eta <= ARRIVING_WINDOW_DAYS
+      );
     }
     case 'transit':
       return po.status === 'in_transit';

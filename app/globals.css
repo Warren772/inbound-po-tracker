@@ -16,7 +16,7 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
-s
+
 .numeric {
   font-variant-numeric: tabular-nums;
 }

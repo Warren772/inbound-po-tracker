@@ -37,7 +37,7 @@ Random data produces incoherent records (receive dates before ship dates) and bu
 - Vendor origins, ports, brands, and line items should be plausible for the domain.
 
 ## Status model
-A PO moves through: `draft -> confirmed -> in_transit -> recieved` with exception reachable from `confirmed` or `in_transit`.
+A PO moves through: `draft -> confirmed -> in_transit -> received` with exception reachable from `confirmed` or `in_transit`.
 
 The server action advances a PO through this state machine and validates the transition. You cannot receive a PO that never shipped. 
 
