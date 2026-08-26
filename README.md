@@ -73,7 +73,7 @@ Stated here rather than guessed silently:
 - **`Mark shipped` records only the ship date.** Vessel, container and a booked
   ETA come from the carrier, so the action does not invent them.
 - **`Clear exception` returns the PO to `exception.raisedFrom` and drops the
-  exception record.** No logging or long-term stroage.
+  exception record.** No logging or long-term storage.
 - **Raising an exception requires a note.** It is the only field the next person
   to open the PO actually needs, so the action rejects an empty one.
 - **A received PO is never flagged.** PO-2026-0925 landed four days after its

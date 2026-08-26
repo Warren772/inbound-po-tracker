@@ -22,8 +22,8 @@ import { listPurchaseOrders } from '@/lib/store';
  * The working list.
  *
  * Filtering is a URL search param read on the server.
- * The views are `<Link>`s, the page re-renders on the server, for a client who
- * that lives in the dashboard can bookmark it.
+ * The views are `<Link>`s and the page re-renders on the server, so a client who
+ * lives in the dashboard can bookmark the view they work from.
  */
 export default async function PurchaseOrderListPage({
   searchParams,

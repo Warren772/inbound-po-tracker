@@ -31,7 +31,7 @@ Random data produces incoherent records (receive dates before ship dates) and bu
 
 
 ## Data conventions:
-- Dates are ISO date strings in the seed. The client should this in a user readable format. Beware of formatting a Date differently on server and client to cause hydration mismatches.
+- Dates are ISO date strings in the seed. The client should render this in a user readable format. Beware of formatting a Date differently on server and client to cause hydration mismatches.
 - "Now" comes from a fixed TODAY constant, never new Date(). 
 - Sea transit Asia -> US East Coast runs roughly 30-40 days. Keep ship and ETA dates internally consistent.
 - Vendor origins, ports, brands, and line items should be plausible for the domain.
@@ -41,7 +41,7 @@ A PO moves through: `draft -> confirmed -> in_transit -> received` with exceptio
 
 The server action advances a PO through this state machine and validates the transition. You cannot receive a PO that never shipped. 
 
-- Invalid transitions return an error the UI surfaces rather than throwing erorrs.
+- Invalid transitions return an error the UI surfaces rather than throwing errors.
 
 - Status values live in one place as a union type. 
 
@@ -76,7 +76,7 @@ One Playwright E2E spec covering the primary path: load the list, open a PO deta
 ## CI
 One GitHub Actions workflow on push and pull_request: install, tsc --noEmit, next lint, next build, then the Playwright spec.
 
-Deployment is out of scope. Verify commits via local testing before comitting. 
+Deployment is out of scope. Verify commits via local testing before committing. 
 
 ## Working style
 - Small, reviewable changes. Feature-sized PRs, each one merged before the next starts.
