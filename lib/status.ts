@@ -105,6 +105,42 @@ export function guard(po: PurchaseOrder, kind: TransitionKind): Guard {
   }
 }
 
+/**
+ * Whether this PO can be dropped.
+ *
+ */
+export function canDelete(po: PurchaseOrder): Guard {
+  return po.status === 'draft'
+    ? OK
+    : {
+        ok: false,
+        reason: `Only a draft can be deleted. ${po.poNumber} is ${STATUS_LABEL[po.status].toLowerCase()}, and the record has to outlive the shipment.`,
+      };
+}
+
+/**
+ * Which fields the edit form may write for a PO in this status.
+ *
+ *   'full'      — a draft, where the commercial terms are still yours to change.
+ *   'logistics' — the ETA, vessel and container the carrier sends back after
+ *                 booking.
+ *   'none'      — received. The PO is closed and its record is now history.
+ */
+export type EditScope = 'full' | 'logistics' | 'none';
+
+export function editScope(po: PurchaseOrder): EditScope {
+  switch (po.status) {
+    case 'draft':
+      return 'full';
+    case 'received':
+      return 'none';
+    case 'confirmed':
+    case 'in_transit':
+    case 'exception':
+      return 'logistics';
+  }
+}
+
 export interface Move {
   kind: TransitionKind;
   label: string;

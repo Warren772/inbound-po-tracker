@@ -72,9 +72,18 @@ export default async function PurchaseOrderListPage({
           <h1 className="text-sm font-semibold text-slate-900">
             {VIEWS.find((definition) => definition.key === view)?.label}
           </h1>
-          <p className="text-xs text-slate-500">
-            {rows.length} {rows.length === 1 ? 'order' : 'orders'} &middot; most urgent first
-          </p>
+          <div className="flex items-baseline gap-4">
+            <p className="text-xs text-slate-500">
+              {rows.length} {rows.length === 1 ? 'order' : 'orders'} &middot; most urgent first
+            </p>
+            <Link
+              href="/purchase-orders/new"
+              data-testid="new-po"
+              className="inline-flex items-center rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-slate-700"
+            >
+              New PO
+            </Link>
+          </div>
         </div>
 
         {rows.length === 0 ? (

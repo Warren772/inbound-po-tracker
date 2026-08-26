@@ -6,8 +6,6 @@ import { transitionPurchaseOrder, type TransitionResult } from '@/app/actions';
 import type { TransitionKind } from '@/lib/status';
 
 /**
- * The only client component in the app.
- *
  * A status change is a form posting to a server action. 
  * Two things make this a client component:
  *
@@ -16,7 +14,8 @@ import type { TransitionKind } from '@/lib/status';
  *      throwing, so an illegal move has to be rendered next to the button that
  *      caused it.
  *
- * Everything else on both routes is a server component.
+ * The create, edit and delete forms are client components for the same two
+ * reasons. Everything else on every route is a server component.
  */
 
 const NO_ERROR: TransitionResult = { error: null };
