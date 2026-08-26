@@ -37,6 +37,16 @@ export function orderValueUsd(po: PurchaseOrder): number {
   return po.lines.reduce((sum, line) => sum + line.quantity * line.unitCostUsd, 0);
 }
 
+/**
+ * Days from sailing to the booked ETA, or null when either date is missing.
+ *
+ * This is the booking's own claim about the voyage.
+ */
+export function bookedTransitDays(po: PurchaseOrder): number | null {
+  if (po.shippedOn === null || po.etaOn === null) return null;
+  return daysBetween(po.shippedOn, po.etaOn);
+}
+
 /** How many days a PO has been at sea, or null if it never sailed. */
 export function daysAtSea(po: PurchaseOrder): number | null {
   if (po.shippedOn === null) return null;
@@ -44,6 +54,8 @@ export function daysAtSea(po: PurchaseOrder): number | null {
 }
 
 const ARRIVING_WINDOW_DAYS = 7;
+/** Floor of the Asia to US East Coast sea run. Below this, an ETA is a leftover. */
+const MIN_SEA_TRANSIT_DAYS = 30;
 const STALE_DRAFT_DAYS = 14;
 const UNSHIPPED_ETA_WINDOW_DAYS = 14;
 
@@ -79,6 +91,20 @@ export function attentionFor(po: PurchaseOrder): Attention | null {
       level: 'critical',
       label: `Not sailed, ETA ${formatDayOffset(eta)}`,
       detail: `ETA ${formatDate(po.etaOn as string)} (${formatDayOffset(eta)}) with no ship date on file. Sea transit alone is 30-40 days.`,
+    };
+  }
+
+  // A PO that sails long after its ETA was booked keeps that stale ETA.
+  const bookedTransit = bookedTransitDays(po);
+  if (
+    po.status === 'in_transit' &&
+    bookedTransit !== null &&
+    bookedTransit < MIN_SEA_TRANSIT_DAYS
+  ) {
+    return {
+      level: 'critical',
+      label: `Stale ETA, ${bookedTransit}d transit`,
+      detail: `Sailed ${formatDate(po.shippedOn as string)} against a booked ETA of ${formatDate(po.etaOn as string)}. That is ${bookedTransit} days for a run that takes 30 to 40, so the booking predates the sailing. Get a revised ETA from the carrier before anyone plans against it.`,
     };
   }
 
@@ -160,8 +186,14 @@ export function matchesView(po: PurchaseOrder, view: ViewKey): boolean {
       // Bounded at both ends. An ETA already in the past is overdue, not
       // arriving, and belongs to 'attention' and 'transit' rather than here.
       const eta = daysToEta(po);
+      const transit = bookedTransitDays(po);
       return (
-        po.status === 'in_transit' && eta !== null && eta >= 0 && eta <= ARRIVING_WINDOW_DAYS
+        po.status === 'in_transit' &&
+        eta !== null &&
+        eta >= 0 &&
+        eta <= ARRIVING_WINDOW_DAYS &&
+        transit !== null &&
+        transit >= MIN_SEA_TRANSIT_DAYS
       );
     }
     case 'transit':
