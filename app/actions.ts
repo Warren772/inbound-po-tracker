@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { TODAY, type PurchaseOrder, type PurchaseOrderLine } from '@/data/purchase-orders';
-import { daysBetween, isIsoDate } from '@/lib/dates';
+import { daysBetween, formatUnits, formatUsd, isIsoDate } from '@/lib/dates';
 import {
   addPurchaseOrder,
   deletePurchaseOrder as removePurchaseOrder,
@@ -404,6 +404,7 @@ function readEditedLines(
   return { lines };
 }
 
+const MIN_QUANTITY = 1;
 const MAX_QUANTITY = 1_000_000;
 const MIN_UNIT_COST = 0.01;
 const MAX_UNIT_COST = 100_000;
@@ -413,15 +414,20 @@ function readAmounts(
   rawCost: string,
   index: number,
 ): { quantity: number; unitCostUsd: number } | Failed {
+  // Both messages name both bounds.
   const quantity = Number(rawQuantity);
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
-    return { error: `Line ${index + 1} needs a whole quantity of at least 1.` };
+  if (!Number.isInteger(quantity) || quantity < MIN_QUANTITY || quantity > MAX_QUANTITY) {
+    return {
+      error: `Line ${index + 1} needs a whole quantity between ${formatUnits(MIN_QUANTITY)} and ${formatUnits(MAX_QUANTITY)}.`,
+    };
   }
 
   // Rounded before it is checked.
   const unitCostUsd = Math.round(Number(rawCost) * 100) / 100;
   if (!Number.isFinite(unitCostUsd) || unitCostUsd < MIN_UNIT_COST || unitCostUsd > MAX_UNIT_COST) {
-    return { error: `Line ${index + 1} needs a unit cost of at least $0.01.` };
+    return {
+      error: `Line ${index + 1} needs a unit cost between $${MIN_UNIT_COST.toFixed(2)} and ${formatUsd(MAX_UNIT_COST)}.`,
+    };
   }
 
   return { quantity, unitCostUsd };

@@ -5,7 +5,6 @@ import { useActionState } from 'react';
 import { editPurchaseOrder, type FormResult } from '@/app/actions';
 import { Field } from '@/components/field';
 import type { PurchaseOrder } from '@/data/purchase-orders';
-import { formatUsd } from '@/lib/dates';
 
 /**
  * Reusable component for the edit forms.
@@ -104,7 +103,7 @@ export function EditForm({
                       </span>
                       <span className="mt-0.5 block text-xs text-slate-500">{line.description}</span>
                       <span className="mt-0.5 block text-xs text-slate-400">
-                        was {line.quantity} @ {formatUsd(line.unitCostUsd)}
+                        was {line.quantity} @ ${line.unitCostUsd.toFixed(2)}
                       </span>
                     </div>
                     <Field
