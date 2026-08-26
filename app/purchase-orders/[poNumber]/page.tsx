@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import type { PurchaseOrder } from '@/data/purchase-orders';
-import { StatusIndicator } from '@/components/status-indicator';
+import { StatusIndicator, STATUS_DOT } from '@/components/status-indicator';
 import { TransitionForm } from '@/components/transition-form';
 import { daysBetween, formatDate, formatUnits, formatUsd } from '@/lib/dates';
 import {
@@ -52,7 +52,7 @@ export default async function PurchaseOrderDetailPage({
       <header className="flex flex-wrap items-start justify-between gap-4 rounded-lg bg-white px-5 py-4 ring-1 ring-slate-200">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="numeric text-lg font-semibold tracking-tight text-slate-900">
+            <h1 className="page-title numeric">
               {po.poNumber}
             </h1>
             <StatusIndicator status={po.status} />
@@ -67,13 +67,13 @@ export default async function PurchaseOrderDetailPage({
 
         <dl className="flex gap-8 text-right">
           <div>
-            <dt className="text-xs tracking-wide text-slate-500 uppercase">Units</dt>
+            <dt className="section-title">Units</dt>
             <dd className="numeric mt-0.5 text-base font-semibold text-slate-900">
               {formatUnits(totalUnits(po))}
             </dd>
           </div>
           <div>
-            <dt className="text-xs tracking-wide text-slate-500 uppercase">Order value</dt>
+            <dt className="section-title">Order value</dt>
             <dd className="numeric mt-0.5 text-base font-semibold text-slate-900">
               {formatUsd(orderValueUsd(po))}
             </dd>
@@ -98,7 +98,7 @@ export default async function PurchaseOrderDetailPage({
 
       {po.exception ? (
         <section className="rounded-lg bg-white p-5 ring-1 ring-rose-200">
-          <h2 className="text-sm font-semibold text-rose-900">
+          <h2 className="section-title text-rose-900">
             {EXCEPTION_LABEL[po.exception.code]}
           </h2>
           <p className="mt-1 text-xs text-slate-500">
@@ -139,7 +139,7 @@ function ActionPanel({ po }: { po: PurchaseOrder }) {
 
   return (
     <section className="rounded-lg bg-white p-5 ring-1 ring-slate-200">
-      <h2 className="text-xs font-medium tracking-wide text-slate-500 uppercase">Move this PO</h2>
+      <h2 className="section-title">Move this PO</h2>
 
       {moves.length === 0 ? (
         <p className="mt-3 text-sm text-slate-600">
@@ -219,6 +219,24 @@ function ActionPanel({ po }: { po: PurchaseOrder }) {
   );
 }
 
+/**
+ * Where each status sits on the five milestones below.
+ *
+ * `received` is the last of them rather than the fourth: a received PO has its
+ * booked ETA behind it, and the ETA is a projection the receipt supersedes.
+ */
+const STAGE_INDEX: Record<'draft' | 'confirmed' | 'in_transit' | 'received', number> = {
+  draft: 0,
+  confirmed: 1,
+  in_transit: 2,
+  received: 4,
+};
+
+/**
+ * 
+ * The pulse is one CSS animation on one element, transform and opacity only, so
+ * a live PO costs the same to render as a closed one.
+ */
 function Timeline({ po }: { po: PurchaseOrder }) {
   const steps: { label: string; date: string | null; projected?: boolean }[] = [
     { label: 'Ordered', date: po.orderedOn },
@@ -228,36 +246,83 @@ function Timeline({ po }: { po: PurchaseOrder }) {
     { label: 'Received at DC', date: po.receivedOn },
   ];
 
+  // An exception is not a stage of its own. The PO is still parked at the stage
+  // it was raised from, so that is where the head of the track sits, and the
+  // head takes the rose of the exception rather than the hue of that stage.
+  const stage: keyof typeof STAGE_INDEX =
+    po.status === 'exception' ? (po.exception?.raisedFrom ?? 'confirmed') : po.status;
+  const headIndex = STAGE_INDEX[stage];
+
+  // A received PO is closed. Nothing is in flight, so nothing pulses.
+  const moving = po.status !== 'received';
+
   let previousStepDate: string | null = null;
 
   return (
     <section className="rounded-lg bg-white p-5 ring-1 ring-slate-200">
-      <h2 className="text-xs font-medium tracking-wide text-slate-500 uppercase">Timeline</h2>
-      <ol className="mt-3">
-        {steps.map((step) => {
+      <h2 className="section-title">Timeline</h2>
+      <ol className="mt-4">
+        {steps.map((step, index) => {
           const gap =
             step.date && previousStepDate ? daysBetween(previousStepDate, step.date) : null;
           previousStepDate = step.date;
 
+          const head = index === headIndex;
+          const done = index < headIndex && step.date !== null;
+
           return (
-            <li key={step.label} className="flex items-baseline gap-3 py-1.5">
-              <span
-                aria-hidden
-                className={`mt-1.5 size-2 shrink-0 rounded-full ${
-                  step.date
-                    ? step.projected && !po.receivedOn
-                      ? 'ring-2 ring-slate-400 ring-inset'
-                      : 'bg-slate-900'
-                    : 'bg-slate-200'
-                }`}
-              />
-              <span className={`text-sm ${step.date ? 'text-slate-800' : 'text-slate-500'}`}>
-                {step.label}
+            <li key={step.label} className="relative flex items-start gap-3 pb-4 last:pb-0">
+              {index === steps.length - 1 ? null : (
+                <span
+                  aria-hidden
+                  className={`absolute top-4 -bottom-1 left-1 ${
+                    index < headIndex
+                      ? 'w-0.5 rounded-full bg-emerald-400'
+                      : 'w-0 border-l-2 border-dashed border-slate-200'
+                  }`}
+                />
+              )}
+
+              <span aria-hidden className="relative mt-1 flex size-2.5 shrink-0">
+                {head && moving ? (
+                  <span
+                    className={`timeline-pulse absolute inset-0 rounded-full ${STATUS_DOT[po.status]}`}
+                  />
+                ) : null}
+                <span
+                  className={`relative size-2.5 rounded-full ${
+                    head
+                      ? STATUS_DOT[po.status]
+                      : done
+                        ? 'bg-emerald-500'
+                        : step.projected
+                          ? 'bg-white ring-2 ring-slate-300 ring-inset'
+                          : 'bg-slate-200'
+                  }`}
+                />
               </span>
-              <span className="numeric ml-auto text-sm whitespace-nowrap text-slate-700">
+
+              <span
+                className={`text-sm ${
+                  head
+                    ? 'font-medium text-slate-900'
+                    : step.date
+                      ? 'text-slate-700'
+                      : 'text-slate-400'
+                }`}
+              >
+                {step.label}
+                {head ? <span className="sr-only"> (current stage)</span> : null}
+              </span>
+
+              <span
+                className={`numeric ml-auto text-sm whitespace-nowrap ${
+                  step.date ? 'text-slate-700' : 'text-slate-400'
+                }`}
+              >
                 {step.date ? formatDate(step.date) : 'Not set'}
               </span>
-              <span className="numeric w-16 shrink-0 text-right text-xs whitespace-nowrap text-slate-500">
+              <span className="numeric w-14 shrink-0 text-right text-xs whitespace-nowrap text-slate-400">
                 {gap === null ? '' : `+${gap}d`}
               </span>
             </li>
@@ -273,7 +338,7 @@ function Shipment({ po }: { po: PurchaseOrder }) {
 
   return (
     <section className="h-fit rounded-lg bg-white p-5 ring-1 ring-slate-200">
-      <h2 className="text-xs font-medium tracking-wide text-slate-500 uppercase">Shipment</h2>
+      <h2 className="section-title">Shipment</h2>
       <dl className="mt-3 space-y-2.5 text-sm">
         <Fact label="Vessel" value={po.vessel} />
         <Fact label="Container" value={po.containerNumber} mono />
@@ -311,23 +376,23 @@ function Fact({ label, value, mono }: { label: string; value: string | null; mon
 function LineItems({ po }: { po: PurchaseOrder }) {
   return (
     <section className="overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
-      <h2 className="border-b border-slate-200 px-5 py-3 text-xs font-medium tracking-wide text-slate-500 uppercase">
+      <h2 className="section-title border-b border-slate-200 px-5 py-3">
         Line items
       </h2>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[560px] border-collapse text-left text-[13px]">
+        <table className="w-full min-w-[560px] border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-xs tracking-wide text-slate-500 uppercase">
-              <th scope="col" className="py-2 pr-3 pl-5 font-medium">
+            <tr className="border-b border-slate-200">
+              <th scope="col" className="section-title py-2 pr-3 pl-5">
                 SKU
               </th>
-              <th scope="col" className="px-3 py-2 text-right font-medium">
+              <th scope="col" className="section-title px-3 py-2 text-right">
                 Qty
               </th>
-              <th scope="col" className="px-3 py-2 text-right font-medium">
+              <th scope="col" className="section-title px-3 py-2 text-right">
                 Unit
               </th>
-              <th scope="col" className="py-2 pr-5 pl-3 text-right font-medium">
+              <th scope="col" className="section-title py-2 pr-5 pl-3 text-right">
                 Extended
               </th>
             </tr>

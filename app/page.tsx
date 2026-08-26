@@ -55,10 +55,12 @@ export default async function PurchaseOrderListPage({
                   : 'bg-white text-slate-900 ring-1 ring-slate-200 ring-inset hover:bg-slate-50'
               }`}
             >
-              <span className="numeric block text-xl leading-none font-semibold">{count}</span>
-              <span className="mt-1.5 block text-xs font-medium">{definition.label}</span>
+              <span className="numeric block text-2xl leading-none font-semibold tracking-tight">
+                {count}
+              </span>
+              <span className="mt-2 block text-xs font-semibold">{definition.label}</span>
               <span
-                className={`mt-0.5 block text-xs ${active ? 'text-slate-300' : 'text-slate-500'}`}
+                className={`mt-0.5 block text-2xs ${active ? 'text-slate-300' : 'text-slate-500'}`}
               >
                 {definition.hint}
               </span>
@@ -69,7 +71,7 @@ export default async function PurchaseOrderListPage({
 
       <section className="overflow-hidden rounded-lg bg-white ring-1 ring-slate-200">
         <div className="flex items-baseline justify-between gap-4 border-b border-slate-200 px-4 py-3">
-          <h1 className="text-sm font-semibold text-slate-900">
+          <h1 className="page-title">
             {VIEWS.find((definition) => definition.key === view)?.label}
           </h1>
           <div className="flex items-baseline gap-4">
@@ -92,28 +94,28 @@ export default async function PurchaseOrderListPage({
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1040px] border-collapse text-left text-[13px]">
+            <table className="w-full min-w-[1040px] border-collapse text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-xs tracking-wide text-slate-500 uppercase">
-                  <th scope="col" className="py-2 pr-3 pl-4 font-medium">
+                <tr className="border-b border-slate-200">
+                  <th scope="col" className="section-title py-2 pr-3 pl-4">
                     PO
                   </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
+                  <th scope="col" className="section-title px-3 py-2">
                     Status
                   </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
+                  <th scope="col" className="section-title px-3 py-2">
                     Vendor &amp; lane
                   </th>
-                  <th scope="col" className="px-3 py-2 font-medium">
+                  <th scope="col" className="section-title px-3 py-2">
                     Next date
                   </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                  <th scope="col" className="section-title px-3 py-2 text-right">
                     Units
                   </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                  <th scope="col" className="section-title px-3 py-2 text-right">
                     Value
                   </th>
-                  <th scope="col" className="py-2 pr-4 pl-3 font-medium">
+                  <th scope="col" className="section-title py-2 pr-4 pl-3">
                     Action
                   </th>
                 </tr>

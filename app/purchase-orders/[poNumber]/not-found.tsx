@@ -3,7 +3,7 @@ import Link from 'next/link';
 export default function PurchaseOrderNotFound() {
   return (
     <div className="rounded-lg bg-white px-5 py-12 text-center ring-1 ring-slate-200">
-      <h1 className="text-sm font-semibold text-slate-900">No such purchase order</h1>
+      <h1 className="page-title">No such purchase order</h1>
       <p className="mt-1 text-sm text-slate-600">
         That PO number is not on the book. It may have been mistyped.
       </p>

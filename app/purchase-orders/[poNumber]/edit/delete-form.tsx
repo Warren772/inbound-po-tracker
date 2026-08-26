@@ -17,7 +17,7 @@ export function DeleteForm({ poNumber }: { poNumber: string }) {
 
   return (
     <section className="rounded-lg bg-white p-5 ring-1 ring-rose-200">
-      <h2 className="text-xs font-medium tracking-wide text-rose-900 uppercase">Delete</h2>
+      <h2 className="section-title text-rose-900">Delete</h2>
       <p className="mt-1 max-w-[70ch] text-sm text-slate-600">
         Nothing outside this app depends on {poNumber} yet. Once a vendor confirms it there is a
         commitment behind the record and it stops being deletable.
