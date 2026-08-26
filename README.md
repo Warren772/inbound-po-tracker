@@ -30,7 +30,9 @@ The job is moving POs through states and observing preexisting states.
 [create-form.tsx](app/purchase-orders/new/create-form.tsx),
 [edit-form.tsx](app/purchase-orders/%5BpoNumber%5D/edit/edit-form.tsx) and
 [delete-form.tsx](app/purchase-orders/%5BpoNumber%5D/edit/delete-form.tsx). 
-Every mutation is a form posting to a server action.
+Every mutation is a form posting to a server action. Each one is a client
+component for the same two reasons: `useActionState` reads the pending state,
+and the action returns its error as a value that has to render.
 
 **Editing and the status machine own disjoint fields.** No input on the edit
 form writes `status`, `confirmedOn`, `shippedOn` or `receivedOn`
@@ -56,7 +58,7 @@ app/            routes, layout, server actions
 components/     ui components shared by both routes
 data/           handcrafted synthetic seed
 lib/            business logic: state machine, date helpers, derived state, in-memory store
-e2e/            one Playwright test
+e2e/            one Playwright spec file
 ```
 
 ## Persistence
