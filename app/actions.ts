@@ -95,9 +95,14 @@ export async function createPurchaseOrder(
 ): Promise<FormResult> {
   const values = echo(formData);
 
-  const poNumber = text(formData, 'poNumber');
-  if (!/^PO-\d{4}-\d{4}$/.test(poNumber)) {
-    return { error: 'PO number looks like PO-2026-1042.', values };
+  const poNumber = normalizePoNumber(text(formData, 'poNumber'));
+  values.poNumber = poNumber;
+
+  if (!PO_NUMBER.test(poNumber)) {
+    return {
+      error: `"${poNumber}" is not a PO number. It is PO, a four-digit year and a four-digit sequence, like PO-2026-1042.`,
+      values,
+    };
   }
   if (getPurchaseOrder(poNumber)) {
     return { error: `${poNumber} is already on the book.`, values };
@@ -223,6 +228,20 @@ export async function resetPurchaseOrders(): Promise<void> {
 /* -------------------------------------------------------------------------- */
 
 const MAX_TEXT = 80;
+
+const PO_NUMBER = /^PO-\d{4}-\d{4}$/;
+
+/** Hyphen lookalikes, and the spaces that survive a trim because they are inside. */
+const DASHES = /[\u2010-\u2015\u2212]/g;
+const INNER_SPACE = /[\s\u00a0]+/g;
+
+/**
+ * A PO number as the ERP writes it.
+ *
+ */
+function normalizePoNumber(raw: string): string {
+  return raw.replace(DASHES, '-').replace(INNER_SPACE, '').toUpperCase();
+}
 
 function echo(formData: FormData): Record<string, string> {
   const values: Record<string, string> = {};
