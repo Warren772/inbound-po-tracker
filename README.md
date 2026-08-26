@@ -128,3 +128,6 @@ fixture.
 [.github/workflows/ci.yml](.github/workflows/ci.yml) runs on push and pull
 request: install, `tsc --noEmit`, `next lint`, `next build`, then the spec.
 Deployment is out of scope.
+
+## Approximate Time Spent 
+~2.5 hours including agentic review loop.
