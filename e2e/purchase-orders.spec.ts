@@ -7,7 +7,25 @@ import { expect, test } from '@playwright/test';
  * below rather than on each other's leftovers.
  */
 test.beforeEach(async ({ page }) => {
+  // Reading is public: the list renders for a signed-out visitor, and it offers
+  // no way to change anything.
   await page.goto('/');
+  await expect(page.getByTestId('po-row-PO-2026-0948')).toBeVisible();
+  await expect(page.getByTestId('new-po')).toHaveCount(0);
+  await expect(page.getByTestId('transition-receive')).toHaveCount(0);
+
+  // Middleware no longer covers the JSON export, so the handler's own session
+  // check is the only thing in front of it. Asserted here because nothing else
+  // in the run would notice if it stopped holding.
+  const anonymous = await page.request.get('/api/purchase-orders', { maxRedirects: 0 });
+  expect(anonymous.status()).toBe(401);
+
+  // The rest of the run needs an account.
+  await page.getByTestId('sign-in-link').click();
+  await page.getByLabel('Email').fill('ops@savannah.example');
+  await page.getByLabel('Password').fill('inbound');
+  await page.getByTestId('sign-in').click();
+
   await page.getByRole('button', { name: 'Reset demo data' }).click();
   await expect(page.getByTestId('po-row-PO-2026-0948')).toBeVisible();
 });
@@ -34,6 +52,19 @@ test('an in-transit PO can be received from its detail page', async ({ page }) =
   await expect(
     page.getByTestId('po-row-PO-2026-0948').getByTestId('status'),
   ).toHaveText('Received');
+
+  // The JSON export reports live store state, not the committed seed, which has
+  // this PO as `in_transit`.
+  const exported = await page.evaluate(async () => {
+    const response = await fetch('/api/purchase-orders');
+    return { status: response.status, body: await response.json() };
+  });
+  expect(exported.status).toBe(200);
+  expect(
+    exported.body.purchaseOrders.find(
+      (po: { poNumber: string }) => po.poNumber === 'PO-2026-0948',
+    ).status,
+  ).toBe('received');
 });
 
 test('a PO can be raised, edited and deleted', async ({ page }) => {

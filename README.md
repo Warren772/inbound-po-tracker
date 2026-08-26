@@ -3,11 +3,16 @@
 Inbound purchase orders for a home textiles importer goods manufactured in Asia,
 shipped by sea to a US East Coast DC. The client is an operations coordinator and their daily workflow relies on this dashboard. 
 
+![Ten POs sorted by urgency, exceptions and overdue containers first](docs/list-view.png)
+
 ```bash
 npm install
 npm run dev            # http://localhost:3000
 npm run build && npx playwright test
 ```
+
+Sign in with `ops@savannah.example` / `inbound`. There is no user store, so that
+is the only account there is.
 
 ## What the UI is optimized for
 
@@ -27,14 +32,18 @@ The job is moving POs through states and observing preexisting states.
 
 ## Architecture
 
-**Four client components**
+**Five form client components**
 [components/transition-form.tsx](components/transition-form.tsx),
 [create-form.tsx](app/purchase-orders/new/create-form.tsx),
-[edit-form.tsx](app/purchase-orders/%5BpoNumber%5D/edit/edit-form.tsx) and
-[delete-form.tsx](app/purchase-orders/%5BpoNumber%5D/edit/delete-form.tsx). 
+[edit-form.tsx](app/purchase-orders/%5BpoNumber%5D/edit/edit-form.tsx),
+[delete-form.tsx](app/purchase-orders/%5BpoNumber%5D/edit/delete-form.tsx) and
+[login-form.tsx](app/login/login-form.tsx).
 Every mutation is a form posting to a server action. Each one is a client
 component for the same two reasons: `useActionState` reads the pending state,
 and the action returns its error as a value that has to render.
+[app/error.tsx](app/error.tsx) ] React
+error boundaries catch during render and hold state, so the framework requires
+it to be a client component.
 
 **Editing and the status machine own disjoint fields.** No input on the edit
 form writes `status`, `confirmedOn`, `shippedOn` or `receivedOn`
@@ -43,6 +52,36 @@ form writes `status`, `confirmedOn`, `shippedOn` or `receivedOn`
 **The timeline reads off the head of the track, not off each step.** The status
 maps to one index in the five milestones, and done/current/projected fall out of
 the comparison.
+
+**The button paints the status the transition lands on, and the server can still
+say no.** Clicking `Receive` reads `-> Received` immediately; `guard()` runs
+server-side regardless, and a refused move renders its reason under the button
+while the label snaps back. 
+
+
+That optimism is read from `useFormStatus` in a
+child component rather than from `useOptimistic`.
+
+**Every form still posts with JavaScript disabled.** 
+
+**There is deliberately no `app/loading.tsx`.** A root `loading.tsx` puts the
+page behind a Suspense boundary, so Next streams the real content inside
+`<div hidden>` and swaps it in with a script.
+cost and is present.
+
+**Routes are dynamic because the data is mutable.**
+No page carries `force-dynamic`. `/` reads `searchParams`, and
+`/purchase-orders/[poNumber]` has no `generateStaticParams`. The one place the
+export does appear is the JSON route below, where it is pinning a default rather
+than changing one.
+
+## The JSON export
+
+`GET /api/purchase-orders` returns `{ today, purchaseOrders }` from the live store, `no-store`.
+
+- **Could not be middleware.** The Edge sandbox is a separate V8 context, so importing `lib/store.ts` there compiles a second array from the seed and serves it forever. Measured: renderer says `received`, middleware still says `in_transit`.
+- **Gated by its own session check**, the only one left since the matcher narrowed. Anonymous `curl` gets `401`.
+- **`force-dynamic` pins a default**; `revalidate` or `generateStaticParams` would freeze the seed into the build.
 
 **Filtering is a URL search param** The view tiles are `<Link>`s and the list re-renders on the server.
 
@@ -82,6 +121,29 @@ disappears on reset or restart along with every other mutation.
 whose state is in memory, and it is also the hook the Playwright fixture uses, so
 repeat local runs are deterministic without a test-only back door.
 
+## Auth
+[lib/session.ts](lib/session.ts) signs and verifies an HS256 JWT on Web Crypto
+and **imports nothing**.
+
+
+**Reading is public. Changing the book is private.** 
+**The gate is two halves, and the second one is the real one.**
+[middleware.ts](middleware.ts) covers only the two routes that exist to mutate,
+`/purchase-orders/new` and `/purchase-orders/[poNumber]/edit`. That is a courtesy
+for humans following a stale link. The boundary is the session check inside every
+mutation in [app/actions.ts](app/actions.ts), and it has to be: a server action
+POSTs to whatever URL the page is already on, and those URLs are now public. Next
+also forwards an action id the current page does not own to whichever page does,
+so there is no route-shaped place to stand.
+
+The actions return that as a value rather than redirecting, because a 307
+preserves the method: redirecting an expired submit would re-POST the form to
+`/login` and lose whatever was typed into it, which is usually an exception note.
+
+**What this is not.** The credential is a constant, the secret falls back to a
+committed default when `AUTH_SECRET` is unset.
+
+
 ## Assumptions
 
 Stated here rather than guessed silently:
@@ -120,8 +182,10 @@ and on the list behind it. The CRUD round trip: raise a draft, edit a commercial
 field, a line quantity and the ETA in one save, confirm a confirmed PO offers no
 delete, then delete the draft and confirm the row is gone.
 
-Both assert on rendered content and contain no timeouts. They share the reset
-fixture.
+Both assert on rendered content and contain no timeouts. They share one fixture,
+which now signs in before it resets — going to `/` signed out lands on `/login`
+via middleware, so the redirect is exercised by every run rather than by a third
+test. Still one spec, still two tests.
 
 ## CI
 

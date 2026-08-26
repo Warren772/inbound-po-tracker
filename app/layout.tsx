@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { TODAY } from '@/data/purchase-orders';
+import { currentSession } from '@/lib/auth';
 import { formatDate } from '@/lib/dates';
-import { resetPurchaseOrders } from '@/app/actions';
+import { resetPurchaseOrders, signOut } from '@/app/actions';
 
 import './globals.css';
 
@@ -12,7 +13,10 @@ export const metadata: Metadata = {
   description: 'Inbound purchase orders and shipments for the Savannah DC.',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+/** The header always renders; the session only decides what its right-hand side offers. */
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await currentSession();
+
   return (
     <html lang="en">
       <body className="min-h-screen">
@@ -31,14 +35,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="numeric text-xs text-slate-500">
                 Today <span className="font-medium text-slate-700">{formatDate(TODAY)}</span>
               </p>
-              <form action={resetPurchaseOrders}>
-                <button
-                  type="submit"
-                  className="rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+              {session ? (
+                <>
+                  <form action={resetPurchaseOrders}>
+                    <button
+                      type="submit"
+                      className="rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Reset demo data
+                    </button>
+                  </form>
+                  <form action={signOut}>
+                    <button
+                      type="submit"
+                      data-testid="sign-out"
+                      className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Sign out
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  data-testid="sign-in-link"
+                  className="rounded-md bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-slate-700"
                 >
-                  Reset demo data
-                </button>
-              </form>
+                  Sign in to make changes
+                </Link>
+              )}
             </div>
           </div>
         </header>

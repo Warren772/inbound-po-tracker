@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -18,7 +19,30 @@ import {
   movesFor,
   STATUS_LABEL,
 } from '@/lib/status';
+import { currentSession } from '@/lib/auth';
 import { getPurchaseOrder } from '@/lib/store';
+
+/**
+ * The tab title carries the PO and where it is.
+ *
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ poNumber: string }>;
+}): Promise<Metadata> {
+  const { poNumber } = await params;
+  const po = getPurchaseOrder(decodeURIComponent(poNumber));
+
+  if (!po) {
+    return { title: 'No such purchase order' };
+  }
+
+  return {
+    title: `${po.poNumber} \u00b7 ${STATUS_LABEL[po.status]}`,
+    description: `${po.brand} \u00b7 ${po.vendor}. ${po.originPort} to ${po.destinationPort}.`,
+  };
+}
 
 export default async function PurchaseOrderDetailPage({
   params,
@@ -31,6 +55,8 @@ export default async function PurchaseOrderDetailPage({
   if (!po) notFound();
 
   const attention = attentionFor(po);
+  // Anyone can read a PO. Only an account can move one.
+  const signedIn = (await currentSession()) !== null;
 
   return (
     <div className="space-y-4">
@@ -38,7 +64,7 @@ export default async function PurchaseOrderDetailPage({
         <Link href="/" className="inline-block text-xs text-slate-600 hover:text-slate-900">
           &larr; All purchase orders
         </Link>
-        {editScope(po) === 'none' ? null : (
+        {signedIn && editScope(po) !== 'none' ? (
           <Link
             href={`/purchase-orders/${po.poNumber}/edit`}
             data-testid="edit-po"
@@ -46,7 +72,7 @@ export default async function PurchaseOrderDetailPage({
           >
             Edit
           </Link>
-        )}
+        ) : null}
       </div>
 
       <header className="flex flex-wrap items-start justify-between gap-4 rounded-lg bg-white px-5 py-4 ring-1 ring-slate-200">
@@ -112,7 +138,16 @@ export default async function PurchaseOrderDetailPage({
         </section>
       ) : null}
 
-      <ActionPanel po={po} />
+      {signedIn ? (
+        <ActionPanel po={po} />
+      ) : (
+        <p className="rounded-lg bg-white px-5 py-4 text-sm text-slate-600 ring-1 ring-slate-200">
+          <Link href="/login" className="font-medium text-slate-900 underline underline-offset-2">
+            Sign in
+          </Link>{' '}
+          to move this PO. Everything above is readable without an account.
+        </p>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Timeline po={po} />
@@ -155,6 +190,7 @@ function ActionPanel({ po }: { po: PurchaseOrder }) {
                   poNumber={po.poNumber}
                   kind={move.kind}
                   label={move.label}
+                  to={move.to}
                   variant="primary"
                 />
                 <p className="mt-1.5 text-xs text-slate-500">&rarr; {move.to}</p>
@@ -186,6 +222,7 @@ function ActionPanel({ po }: { po: PurchaseOrder }) {
               poNumber={po.poNumber}
               kind="flag"
               label="Raise exception"
+              to={flag.to}
               variant="quiet"
             >
               <label className="block text-xs font-medium text-slate-600">

@@ -15,6 +15,7 @@ import {
   VIEWS,
   type ViewKey,
 } from '@/lib/derived';
+import { currentSession } from '@/lib/auth';
 import { primaryMove } from '@/lib/status';
 import { listPurchaseOrders } from '@/lib/store';
 
@@ -35,6 +36,9 @@ export default async function PurchaseOrderListPage({
 
   const all = listPurchaseOrders();
   const rows = all.filter((po) => matchesView(po, view)).sort(byUrgency);
+
+  // Reading is public,  the Action column and New PO are private.
+  const signedIn = (await currentSession()) !== null;
 
   return (
     <div className="space-y-5">
@@ -78,13 +82,15 @@ export default async function PurchaseOrderListPage({
             <p className="text-xs text-slate-500">
               {rows.length} {rows.length === 1 ? 'order' : 'orders'} &middot; most urgent first
             </p>
-            <Link
-              href="/purchase-orders/new"
-              data-testid="new-po"
-              className="inline-flex items-center rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-slate-700"
-            >
-              New PO
-            </Link>
+            {signedIn ? (
+              <Link
+                href="/purchase-orders/new"
+                data-testid="new-po"
+                className="inline-flex items-center rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-slate-700"
+              >
+                New PO
+              </Link>
+            ) : null}
           </div>
         </div>
 
@@ -115,14 +121,16 @@ export default async function PurchaseOrderListPage({
                   <th scope="col" className="section-title px-3 py-2 text-right">
                     Value
                   </th>
-                  <th scope="col" className="section-title py-2 pr-4 pl-3">
-                    Action
-                  </th>
+                  {signedIn ? (
+                    <th scope="col" className="section-title py-2 pr-4 pl-3">
+                      Action
+                    </th>
+                  ) : null}
                 </tr>
               </thead>
               <tbody>
                 {rows.map((po) => (
-                  <PurchaseOrderRow key={po.poNumber} po={po} />
+                  <PurchaseOrderRow key={po.poNumber} po={po} signedIn={signedIn} />
                 ))}
               </tbody>
             </table>
@@ -144,7 +152,7 @@ const ATTENTION_TEXT = {
   warning: 'text-amber-700',
 } as const;
 
-function PurchaseOrderRow({ po }: { po: PurchaseOrder }) {
+function PurchaseOrderRow({ po, signedIn }: { po: PurchaseOrder; signedIn: boolean }) {
   const attention = attentionFor(po);
   const milestone = milestoneFor(po);
   const move = primaryMove(po);
@@ -200,18 +208,21 @@ function PurchaseOrderRow({ po }: { po: PurchaseOrder }) {
         {formatUsd(orderValueUsd(po))}
       </td>
 
-      <td className="py-3 pr-4 pl-3">
-        {move ? (
-          <TransitionForm
-            poNumber={po.poNumber}
-            kind={move.kind}
-            label={move.label}
-            variant="primary"
-          />
-        ) : (
-          <span className="text-xs text-slate-500">Closed</span>
-        )}
-      </td>
+      {signedIn ? (
+        <td className="py-3 pr-4 pl-3">
+          {move ? (
+            <TransitionForm
+              poNumber={po.poNumber}
+              kind={move.kind}
+              label={move.label}
+              to={move.to}
+              variant="primary"
+            />
+          ) : (
+            <span className="text-xs text-slate-500">Closed</span>
+          )}
+        </td>
+      ) : null}
     </tr>
   );
 }

@@ -1,10 +1,19 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+
+import { currentSession } from '@/lib/auth';
 
 import { TODAY, type PurchaseOrder, type PurchaseOrderLine } from '@/data/purchase-orders';
 import { daysBetween, formatUnits, formatUsd, isIsoDate } from '@/lib/dates';
+import {
+  SESSION_COOKIE,
+  SESSION_TTL_SECONDS,
+  sessionSecret,
+  signSession,
+} from '@/lib/session';
 import {
   addPurchaseOrder,
   deletePurchaseOrder as removePurchaseOrder,
@@ -21,6 +30,52 @@ import {
   isTransitionKind,
   STATUS_LABEL,
 } from '@/lib/status';
+
+/** The real gate. Returns a value, not a redirect: a 307 would re-POST and lose the form. */
+const EXPIRED = 'Your session has expired. Sign in again, then retry this.';
+
+async function signedIn(): Promise<boolean> {
+  return (await currentSession()) !== null;
+}
+
+/** The one account. There is no user store, so it is a constant. */
+const DEMO_EMAIL = 'ops@savannah.example';
+const DEMO_PASSWORD = 'inbound';
+
+/** Not `FormResult`: that echoes FormData back, which would round-trip the password. */
+export interface SignInResult {
+  error: string | null;
+}
+
+export async function signIn(
+  _previous: SignInResult,
+  formData: FormData,
+): Promise<SignInResult> {
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
+  const password = String(formData.get('password') ?? '');
+
+  // One message for both halves.
+  if (email !== DEMO_EMAIL || password !== DEMO_PASSWORD) {
+    return { error: 'That email and password do not match the demo account.' };
+  }
+
+  const token = await signSession(email, sessionSecret(), Math.floor(Date.now() / 1000));
+
+  (await cookies()).set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: SESSION_TTL_SECONDS,
+  });
+
+  redirect('/');
+}
+
+export async function signOut(): Promise<void> {
+  (await cookies()).delete(SESSION_COOKIE);
+  redirect('/login');
+}
 
 /**
  * Actions report failure as a state value and do not throw. 
@@ -43,6 +98,8 @@ export async function transitionPurchaseOrder(
   _previous: TransitionResult,
   formData: FormData,
 ): Promise<TransitionResult> {
+  if (!(await signedIn())) return { error: EXPIRED };
+
   const poNumber = String(formData.get('poNumber') ?? '');
   const kind = String(formData.get('kind') ?? '');
 
@@ -96,6 +153,8 @@ export async function createPurchaseOrder(
 ): Promise<FormResult> {
   const values = echo(formData);
 
+  if (!(await signedIn())) return { error: EXPIRED, values };
+
   const poNumber = normalizePoNumber(text(formData, 'poNumber'));
   values.poNumber = poNumber;
 
@@ -148,6 +207,8 @@ export async function editPurchaseOrder(
   formData: FormData,
 ): Promise<FormResult> {
   const values = echo(formData);
+
+  if (!(await signedIn())) return { error: EXPIRED, values };
 
   const poNumber = text(formData, 'poNumber');
   const po = getPurchaseOrder(poNumber);
@@ -205,6 +266,8 @@ export async function deletePurchaseOrder(
   _previous: TransitionResult,
   formData: FormData,
 ): Promise<TransitionResult> {
+  if (!(await signedIn())) return { error: EXPIRED };
+
   const poNumber = String(formData.get('poNumber') ?? '');
 
   const po = getPurchaseOrder(poNumber);
@@ -228,6 +291,8 @@ export async function deletePurchaseOrder(
  * Playwright tests hook to make repeat local runs deterministic.
  */
 export async function resetPurchaseOrders(): Promise<void> {
+  if (!(await signedIn())) return;
+
   resetStore();
   revalidatePath('/', 'layout');
 }
