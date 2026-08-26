@@ -19,6 +19,7 @@ import {
   guard,
   isExceptionCode,
   isTransitionKind,
+  STATUS_LABEL,
 } from '@/lib/status';
 
 /**
@@ -158,6 +159,14 @@ export async function editPurchaseOrder(
   const scope = editScope(po);
   if (scope === 'none') {
     return { error: `${po.poNumber} is received. A closed PO is a record, not a draft.`, values };
+  }
+
+  // The scope the form was built from, submitted with it.
+  if (text(formData, 'scope') !== scope) {
+    return {
+      error: `${po.poNumber} moved to ${STATUS_LABEL[po.status].toLowerCase()} while this form was open, so nothing was saved. Reload to see what can still be changed.`,
+      values,
+    };
   }
 
   let edited: PurchaseOrder = po;

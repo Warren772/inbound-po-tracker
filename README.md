@@ -91,9 +91,12 @@ Stated here rather than guessed silently:
   the state machine's entry edge, so the create form has no status field.
 - **The PO number is typed in, not generated.** It is the ERP's identity and it
   doubles as the route segment.
-- **Editing is scoped by status.** A draft is fully editable. Anything
-  `confirmed`, `in_transit` or `exception` exposes only the carrier's booking —
-  ETA, vessel, container.
+- **Editing is scoped by status.** A draft exposes the vendor, brand, ports,
+  order date and each line's quantity and cost. Anything `confirmed`,
+  `in_transit` or `exception` exposes only the carrier's booking, ETA, vessel,
+  container.
+- **A form carries the scope it was built from.** If the PO moves between render
+  and submit, the action refuses the whole submit rather than saving.
 - **Only a draft can be deleted.** Nothing outside the app depends on a draft.
 
 ## Testing

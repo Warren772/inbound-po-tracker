@@ -43,7 +43,7 @@ export default async function EditPurchaseOrderPage({
         </div>
         <p className="mt-1 max-w-[70ch] text-sm text-slate-600">
           {scope === 'full'
-            ? 'Nobody has committed to this draft yet, so everything on it is still yours to change. The status and its dates are not — those come from moving the PO.'
+            ? 'Nobody has committed to this draft yet, so the vendor, lane, order date and line amounts are still yours to change. The PO number and its SKUs are identity, and the status and its dates come from moving the PO.'
             : scope === 'logistics'
               ? 'The vendor has confirmed, so the commercial terms are fixed. The carrier’s booking is not: ETA, vessel and container land here as they come back.'
               : 'This PO is received. A closed PO is a record of what happened, not a draft, so there is nothing here to edit.'}

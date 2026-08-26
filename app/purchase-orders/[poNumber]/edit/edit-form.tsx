@@ -26,6 +26,7 @@ export function EditForm({
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="poNumber" value={po.poNumber} />
+      <input type="hidden" name="scope" value={scope} />
 
       <fieldset disabled={isPending} className="space-y-4">
         {scope === 'full' ? (
