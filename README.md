@@ -25,10 +25,15 @@ The job is moving POs through states and observing preexisting states.
 
 ## Architecture
 
-**One client component.** [components/transition-form.tsx](components/transition-form.tsx)
-is the only `"use client"` file. A transition is a form posting to a server
-action. 
-`useActionState` It reads the pending state and displays error states. 
+**Four client components**
+[components/transition-form.tsx](components/transition-form.tsx),
+[create-form.tsx](app/purchase-orders/new/create-form.tsx),
+[edit-form.tsx](app/purchase-orders/%5BpoNumber%5D/edit/edit-form.tsx) and
+[delete-form.tsx](app/purchase-orders/%5BpoNumber%5D/edit/delete-form.tsx). 
+Every mutation is a form posting to a server action.
+
+**Editing and the status machine own disjoint fields.** No input on the edit
+form writes `status`, `confirmedOn`, `shippedOn` or `receivedOn`
 
 **Filtering is a URL search param** The view tiles are `<Link>`s and the list re-renders on the server.
 
@@ -61,6 +66,9 @@ by the server action. It lives as long as the Node process and resets on restart
 No database, no ORM, no file writes. The copy hangs off `globalThis` so the dev
 server's hot reload does not silently discard it mid-session.
 
+A PO raised in the app lives in that same copy, so it survives navigation and
+disappears on reset or restart along with every other mutation.
+
 "Reset demo data" in the header restores the seed. It is a real feature of a demo
 whose state is in memory, and it is also the hook the Playwright fixture uses, so
 repeat local runs are deterministic without a test-only back door.
@@ -79,13 +87,26 @@ Stated here rather than guessed silently:
 - **A received PO is never flagged.** PO-2026-0925 landed four days after its
   ETA. 
 - **Light theme only.**
+- **A new PO is always a `draft`,** with every downstream date null. `draft` is
+  the state machine's entry edge, so the create form has no status field.
+- **The PO number is typed in, not generated.** It is the ERP's identity and it
+  doubles as the route segment.
+- **Editing is scoped by status.** A draft is fully editable. Anything
+  `confirmed`, `in_transit` or `exception` exposes only the carrier's booking —
+  ETA, vessel, container.
+- **Only a draft can be deleted.** Nothing outside the app depends on a draft.
 
 ## Testing
 
-One spec, [e2e/purchase-orders.spec.ts](e2e/purchase-orders.spec.ts): load the
-list, open PO-2026-0948 (in transit, 16 days overdue), receive it, assert the
-status renders as `Received` on the detail page and on the list behind it. It
-asserts on rendered content and contains no timeouts.
+One spec, [e2e/purchase-orders.spec.ts](e2e/purchase-orders.spec.ts), with two
+tests. The primary path: load the list, open PO-2026-0948 (in transit, 16 days
+overdue), receive it, assert the status renders as `Received` on the detail page
+and on the list behind it. The CRUD round trip: raise a draft, edit a commercial
+field, a line quantity and the ETA in one save, confirm a confirmed PO offers no
+delete, then delete the draft and confirm the row is gone.
+
+Both assert on rendered content and contain no timeouts. They share the reset
+fixture.
 
 ## CI
 

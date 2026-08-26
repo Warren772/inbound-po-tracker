@@ -38,6 +38,17 @@ export function formatDateShort(iso: string): string {
   return shortFormat.format(toUtcMillis(iso));
 }
 
+/**
+ * Whether `value` is a well-formed ISO calendar date.
+ *
+ * The round-trip catches the dates that pass the shape test and are still not
+ * real, for example, '2026-02-30' parses to March 2nd.
+ */
+export function isIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  return new Date(toUtcMillis(value)).toISOString().slice(0, 10) === value;
+}
+
 /** Whole days from `fromIso` to `toIso`. Negative when `toIso` is earlier. */
 export function daysBetween(fromIso: string, toIso: string): number {
   return (toUtcMillis(toIso) - toUtcMillis(fromIso)) / MS_PER_DAY;

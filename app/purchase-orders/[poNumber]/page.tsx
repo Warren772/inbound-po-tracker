@@ -11,7 +11,13 @@ import {
   orderValueUsd,
   totalUnits,
 } from '@/lib/derived';
-import { EXCEPTION_CODES, EXCEPTION_LABEL, movesFor, STATUS_LABEL } from '@/lib/status';
+import {
+  editScope,
+  EXCEPTION_CODES,
+  EXCEPTION_LABEL,
+  movesFor,
+  STATUS_LABEL,
+} from '@/lib/status';
 import { getPurchaseOrder } from '@/lib/store';
 
 export default async function PurchaseOrderDetailPage({
@@ -28,9 +34,20 @@ export default async function PurchaseOrderDetailPage({
 
   return (
     <div className="space-y-4">
-      <Link href="/" className="inline-block text-xs text-slate-600 hover:text-slate-900">
-        &larr; All purchase orders
-      </Link>
+      <div className="flex items-baseline justify-between gap-4">
+        <Link href="/" className="inline-block text-xs text-slate-600 hover:text-slate-900">
+          &larr; All purchase orders
+        </Link>
+        {editScope(po) === 'none' ? null : (
+          <Link
+            href={`/purchase-orders/${po.poNumber}/edit`}
+            data-testid="edit-po"
+            className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
+          >
+            Edit
+          </Link>
+        )}
+      </div>
 
       <header className="flex flex-wrap items-start justify-between gap-4 rounded-lg bg-white px-5 py-4 ring-1 ring-slate-200">
         <div>
